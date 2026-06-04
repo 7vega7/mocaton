@@ -1,6 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { TonClient, WalletContractV4, internal, toNano } from '@ton/ton';
-import { mnemonicToPrivateKey } from '@ton/crypto';
 
 interface Env {
   SUPABASE_URL: string;
@@ -18,7 +16,6 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   if (url.searchParams.get('secret') !== env.CRON_SECRET) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   const result = await processWithdraws(env);
   return Response.json(result);
 }
@@ -39,53 +36,28 @@ async function processWithdraws(env: Env) {
     return { processed: 0, message: 'No due withdrawals' };
   }
 
-  // Cek env vars
   if (!env.TON_ADMIN_MNEMONIC) return { processed: 0, error: 'TON_ADMIN_MNEMONIC not set' };
-  if (!env.TON_API_KEY) return { processed: 0, error: 'TON_API_KEY not set' };
-
-  let client: TonClient;
-  let walletContract: any;
-  let keyPair: any;
-
-  try {
-    client = new TonClient({
-      endpoint: env.TON_RPC_URL || 'https://toncenter.com/api/v2/jsonRPC',
-      apiKey: env.TON_API_KEY,
-    });
-
-    const mnemonic = env.TON_ADMIN_MNEMONIC.split(' ');
-    keyPair = await mnemonicToPrivateKey(mnemonic);
-    const adminWallet = WalletContractV4.create({
-      publicKey: keyPair.publicKey,
-      workchain: 0,
-      walletId: 698983191,
-    });
-    walletContract = client.open(adminWallet);
-  } catch (err: any) {
-    return { processed: 0, error: `Wallet init failed: ${err.message}` };
-  }
 
   let processed = 0;
   const errors: string[] = [];
 
   for (const withdraw of dueWithdraws) {
     try {
-      const seqno = await walletContract.getSeqno();
-      await walletContract.sendTransfer({
-        seqno,
-        secretKey: keyPair.secretKey,
-        messages: [
-          internal({
-            to: withdraw.wallet_address,
-            value: toNano(withdraw.amount_ton.toString()),
-            body: `Mocaton Unstake - ${withdraw.id.slice(0, 8)}`,
-          }),
-        ],
-      });
+      // Kirim TON via TON Center API
+      const sent = await sendTonTransaction(
+        env.TON_ADMIN_MNEMONIC,
+        withdraw.wallet_address,
+        withdraw.amount_ton,
+        env.TON_API_KEY,
+        env.TON_RPC_URL
+      );
+
+      if (!sent.success) throw new Error(sent.error || 'Transaction failed');
 
       await supabase.from('withdraw_requests').update({
         status: 'processed',
         processed_at: new Date().toISOString(),
+        process_tx_hash: sent.tx_hash || '',
       }).eq('id', withdraw.id);
 
       await supabase.from('stakes').update({
@@ -107,7 +79,7 @@ async function processWithdraws(env: Env) {
       }
 
       processed++;
-      await new Promise(r => setTimeout(r, 3000));
+      await new Promise(r => setTimeout(r, 2000));
 
     } catch (err: any) {
       errors.push(`${withdraw.id.slice(0, 8)}: ${err.message}`);
@@ -115,4 +87,49 @@ async function processWithdraws(env: Env) {
   }
 
   return { processed, errors, total: dueWithdraws.length };
+}
+
+async function sendTonTransaction(
+  mnemonic: string,
+  toAddress: string,
+  amountTon: number,
+  apiKey: string,
+  rpcUrl: string
+): Promise<{ success: boolean; tx_hash?: string; error?: string }> {
+  try {
+    // Import crypto functions yang compatible dengan edge runtime
+    const { mnemonicToPrivateKey } = await import('@ton/crypto');
+    const { WalletContractV4, TonClient, internal, toNano } = await import('@ton/ton');
+
+    const client = new TonClient({
+      endpoint: rpcUrl || 'https://toncenter.com/api/v2/jsonRPC',
+      apiKey,
+    });
+
+    const keyPair = await mnemonicToPrivateKey(mnemonic.split(' '));
+    const wallet = WalletContractV4.create({
+      publicKey: keyPair.publicKey,
+      workchain: 0,
+      walletId: 698983191,
+    });
+
+    const walletContract = client.open(wallet);
+    const seqno = await walletContract.getSeqno();
+
+    await walletContract.sendTransfer({
+      seqno,
+      secretKey: keyPair.secretKey,
+      messages: [
+        internal({
+          to: toAddress,
+          value: toNano(amountTon.toString()),
+          body: 'Mocaton Unstake',
+        }),
+      ],
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
