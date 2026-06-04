@@ -6,6 +6,3 @@ pages_build_output_dir = "dist"
 [vars]
 MINI_APP_URL = "https://mocaton.pages.dev"
 VITE_CONTRACT_ADDRESS = "EQBHTU1oeKIHFd2G97WbJZUeSjt29SmQDnFxovOAZHXpEmXv"
-
-[triggers]
-crons = ["* * * * *"]
