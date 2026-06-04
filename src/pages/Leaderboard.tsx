@@ -7,7 +7,7 @@ export default function Leaderboard() {
   useEffect(() => {
     const fetch_ = async () => {
       try {
-        const res = await fetch('/api/leaderboard/');
+        const res = await fetch('/api/leaderboard/index');
         const d = await res.json();
         setData(d.leaderboard || []);
       } catch (e) { console.error(e); }
@@ -25,19 +25,24 @@ export default function Leaderboard() {
   return (
     <div className="referral-page">
       <h1 className="page-title">🏆 Leaderboard</h1>
-      <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '16px' }}>
+      <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '16px', fontFamily: 'Orbitron, monospace', letterSpacing: '0.05em' }}>
         Top $MCT holders — stake + referral combined
       </p>
 
       <div className="stakes-list">
         {data.map((entry, i) => (
-          <div key={i} className={`stake-item ${i < 3 ? 'top-rank' : ''}`} style={{ alignItems: 'center' }}>
+          <div key={i} className="stake-item" style={{ alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
               <div style={{
                 width: '36px', height: '36px', borderRadius: '50%',
                 background: i < 3 ? 'linear-gradient(135deg, var(--accent), var(--accent2))' : 'var(--bg-card2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: i < 3 ? '18px' : '14px', fontWeight: '700', flexShrink: 0
+                fontSize: i < 3 ? '18px' : '12px',
+                fontFamily: 'Orbitron, monospace',
+                fontWeight: '700',
+                color: i < 3 ? '#000' : 'var(--text-muted)',
+                flexShrink: 0,
+                boxShadow: i < 3 ? '0 0 12px rgba(0,245,255,0.3)' : 'none',
               }}>
                 {i < 3 ? medals[i] : `#${entry.rank}`}
               </div>
@@ -46,12 +51,12 @@ export default function Leaderboard() {
                   {entry.full_name || entry.username || 'Anonymous'}
                 </div>
                 <div className="stake-lock">
-                  Stake: {(entry.stake_mct || 0).toFixed(2)} · Ref: {(entry.referral_mct || 0).toFixed(2)}
+                  Stake: {Number(entry.stake_mct).toFixed(4)} · Ref: {Number(entry.referral_mct).toFixed(4)}
                 </div>
               </div>
             </div>
             <div className="stake-points">
-              <div className="stake-points-value">{(entry.total_mct || 0).toFixed(2)}</div>
+              <div className="stake-points-value">{Number(entry.total_mct).toFixed(4)}</div>
               <div className="stake-points-label">$MCT</div>
             </div>
           </div>
