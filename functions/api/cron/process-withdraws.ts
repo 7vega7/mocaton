@@ -1,12 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { TonClient, WalletContractV4, internal, toNano, fromNano } from '@ton/ton';
+import { TonClient, WalletContractV4, internal, toNano } from '@ton/ton';
 import { mnemonicToPrivateKey } from '@ton/crypto';
 
 interface Env {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_KEY: string;
   TELEGRAM_BOT_TOKEN: string;
-  TON_CONTRACT_ADDRESS: string;
   TON_ADMIN_MNEMONIC: string;
   TON_RPC_URL: string;
   TON_API_KEY: string;
@@ -16,9 +15,7 @@ interface Env {
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
   const url = new URL(request.url);
-  const secret = url.searchParams.get('secret');
-
-  if (secret !== env.CRON_SECRET) {
+  if (url.searchParams.get('secret') !== env.CRON_SECRET) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -28,33 +25,45 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
 async function processWithdraws(env: Env) {
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
+  const now = new Date().toISOString();
 
   const { data: dueWithdraws, error } = await supabase
     .from('withdraw_requests')
     .select('*, users(telegram_id, full_name)')
     .eq('status', 'confirmed')
-    .lte('scheduled_process_at', new Date().toISOString())
+    .lte('scheduled_process_at', now)
     .limit(10);
 
-  if (error || !dueWithdraws || dueWithdraws.length === 0) {
+  if (error) return { processed: 0, error: error.message };
+  if (!dueWithdraws || dueWithdraws.length === 0) {
     return { processed: 0, message: 'No due withdrawals' };
   }
 
-  console.log(`Processing ${dueWithdraws.length} withdrawals`);
+  // Cek env vars
+  if (!env.TON_ADMIN_MNEMONIC) return { processed: 0, error: 'TON_ADMIN_MNEMONIC not set' };
+  if (!env.TON_API_KEY) return { processed: 0, error: 'TON_API_KEY not set' };
 
-  const client = new TonClient({
-    endpoint: env.TON_RPC_URL || 'https://toncenter.com/api/v2/jsonRPC',
-    apiKey: env.TON_API_KEY,
-  });
+  let client: TonClient;
+  let walletContract: any;
+  let keyPair: any;
 
-  const mnemonic = env.TON_ADMIN_MNEMONIC.split(' ');
-  const keyPair = await mnemonicToPrivateKey(mnemonic);
-  const adminWallet = WalletContractV4.create({
-    publicKey: keyPair.publicKey,
-    workchain: 0,
-    walletId: 698983191,
-  });
-  const walletContract = client.open(adminWallet);
+  try {
+    client = new TonClient({
+      endpoint: env.TON_RPC_URL || 'https://toncenter.com/api/v2/jsonRPC',
+      apiKey: env.TON_API_KEY,
+    });
+
+    const mnemonic = env.TON_ADMIN_MNEMONIC.split(' ');
+    keyPair = await mnemonicToPrivateKey(mnemonic);
+    const adminWallet = WalletContractV4.create({
+      publicKey: keyPair.publicKey,
+      workchain: 0,
+      walletId: 698983191,
+    });
+    walletContract = client.open(adminWallet);
+  } catch (err: any) {
+    return { processed: 0, error: `Wallet init failed: ${err.message}` };
+  }
 
   let processed = 0;
   const errors: string[] = [];
@@ -99,9 +108,9 @@ async function processWithdraws(env: Env) {
 
       processed++;
       await new Promise(r => setTimeout(r, 3000));
+
     } catch (err: any) {
-      console.error(`Failed to process ${withdraw.id}:`, err);
-      errors.push(`${withdraw.id}: ${err.message}`);
+      errors.push(`${withdraw.id.slice(0, 8)}: ${err.message}`);
     }
   }
 
