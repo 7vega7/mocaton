@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
@@ -7,12 +6,10 @@ import Stake from './pages/Stake';
 import Referral from './pages/Referral';
 import Admin from './pages/Admin';
 import BottomNav from './components/BottomNav';
-import { initTelegramApp, getTelegramUser } from './lib/telegram';
 import type { TelegramUser } from './types';
 import './App.css';
 
-// TON Connect manifest URL
-const MANIFEST_URL = 'https://YOUR_DOMAIN.pages.dev/tonconnect-manifest.json';
+const MANIFEST_URL = 'https://mocaton.pages.dev/tonconnect-manifest.json';
 
 export default function App() {
   const [user, setUser] = useState<TelegramUser | null>(null);
@@ -21,39 +18,73 @@ export default function App() {
 
   useEffect(() => {
     const init = async () => {
-      // Init Telegram Web App
-      initTelegramApp();
-
-      const tgUser = getTelegramUser();
-      if (tgUser) {
-        setUser(tgUser);
-
-        // Daftarkan user ke backend jika belum ada
-        try {
-          const res = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || '',
-            },
-          });
-          const data = await res.json();
-          if (data.is_admin) setIsAdmin(true);
-        } catch (err) {
-          console.error('Registration error:', err);
+      try {
+        // Init Telegram WebApp
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
         }
+
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        const initData = window.Telegram?.WebApp?.initData || '';
+
+        if (tgUser) {
+          setUser(tgUser);
+        }
+
+        // Register user — jika initData kosong tetap lanjut
+        if (initData) {
+          try {
+            const res = await fetch('/api/auth/register', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': initData,
+              },
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.is_admin) setIsAdmin(true);
+            }
+          } catch (e) {
+            console.error('Register error:', e);
+          }
+        }
+      } catch (e) {
+        console.error('Init error:', e);
+      } finally {
+        // Selalu selesai loading, tidak pernah stuck
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
-    init();
+    // Tunggu sebentar agar Telegram SDK load
+    setTimeout(init, 300);
   }, []);
 
   if (isLoading) {
     return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
-        <p>Memuat...</p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        background: '#0E1117',
+        color: '#00B4D8',
+        fontFamily: 'sans-serif',
+        gap: '16px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid #2A3447',
+          borderTopColor: '#00B4D8',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+        <p style={{ color: '#8892A4', margin: 0 }}>Memuat...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -67,7 +98,7 @@ export default function App() {
             <Route path="/stake" element={<Stake user={user} />} />
             <Route path="/referral" element={<Referral user={user} />} />
             {isAdmin && <Route path="/admin" element={<Admin />} />}
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <BottomNav isAdmin={isAdmin} />
         </div>
