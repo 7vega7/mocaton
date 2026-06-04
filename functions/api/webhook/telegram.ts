@@ -253,7 +253,7 @@ async function handleAdminConfirm(shortId: string, supabase: any, env: Env, chat
 
   const { data: withdraws } = await supabase.from('withdraw_requests')
     .select('*, users(telegram_id, full_name)')
-    .filter('id::text', 'like', `${shortId}%`)
+    .filter('id::text', 'ilike', `${shortId}%`)
     .eq('status', 'pending')
     .limit(1);
 
@@ -298,7 +298,7 @@ async function handleAdminConfirm(shortId: string, supabase: any, env: Env, chat
 async function handleAdminReject(shortId: string, reason: string, supabase: any, env: Env, chatId: number, adminTelegramId: number, messageId?: number) {
   const { data: withdraws } = await supabase.from('withdraw_requests')
     .select('*, stakes(id), users(telegram_id, full_name)')
-    .filter('id::text', 'like', `${shortId}%`)
+    .filter('id::text', 'ilike', `${shortId}%`)
     .eq('status', 'pending')
     .limit(1);
 
