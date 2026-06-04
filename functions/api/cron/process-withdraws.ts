@@ -29,7 +29,7 @@ async function processWithdraws(env: Env) {
 
   const { data: dueWithdraws, error } = await supabase
     .from('withdraw_requests')
-    .select('*, users(telegram_id, full_name)')
+    .select('*, users!user_id(telegram_id, full_name)')
     .eq('status', 'confirmed')
     .lte('scheduled_process_at', now)
     .limit(10);
