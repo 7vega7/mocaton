@@ -1,0 +1,12 @@
+{
+  "projects": [
+    {
+      "name": "StakingPool",
+      "path": "./contracts/StakingPool.tact",
+      "output": "./build/StakingPool",
+      "options": {
+        "debug": false
+      }
+    }
+  ]
+}

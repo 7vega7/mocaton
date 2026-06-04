@@ -3,18 +3,16 @@
   "version": "1.0.0",
   "scripts": {
     "build": "tact --config tact.config.json",
-    "test": "jest",
-    "deploy:testnet": "ts-node scripts/deploy.ts testnet",
-    "deploy:mainnet": "ts-node scripts/deploy.ts mainnet"
+    "test": "jest"
   },
   "dependencies": {
-    "@ton/core": "^0.56.0",
+    "@ton/core": "^0.62.0",
     "@ton/ton": "^15.0.0",
     "@ton/crypto": "^3.2.0",
-    "@tact-lang/compiler": "^1.4.0"
+    "@tact-lang/compiler": "^1.6.0"
   },
   "devDependencies": {
-    "@ton/sandbox": "^0.16.0",
+    "@ton/sandbox": "^0.20.0",
     "@types/jest": "^29.0.0",
     "jest": "^29.0.0",
     "ts-jest": "^29.0.0",

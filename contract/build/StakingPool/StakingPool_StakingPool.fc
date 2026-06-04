@@ -1,0 +1,637 @@
+#pragma version =0.4.6;
+#pragma allow-post-modification;
+#pragma compute-asm-ltr;
+
+;; StakingPool_StakingPool.headers.fc
+;;
+;; Header files for StakingPool
+;; NOTE: declarations are sorted for optimal order
+;;
+
+;; __tact_context_get
+(int, slice, int, slice) __tact_context_get() inline;
+
+;; __tact_context_get_sender
+slice __tact_context_get_sender() inline;
+
+;; $DeployOk$_store
+builder $DeployOk$_store(builder build_0, (int) v) inline;
+
+;; $DeployOk$_store_cell
+cell $DeployOk$_store_cell((int) v, builder b) inline;
+
+;; $StakeReceived$_store
+builder $StakeReceived$_store(builder build_0, (slice, int, slice, int) v) inline;
+
+;; $StakeReceived$_store_cell
+cell $StakeReceived$_store_cell((slice, int, slice, int) v, builder b) inline;
+
+;; $WithdrawProcessed$_store
+builder $WithdrawProcessed$_store(builder build_0, (slice, int, slice, int) v) inline;
+
+;; $WithdrawProcessed$_store_cell
+cell $WithdrawProcessed$_store_cell((slice, int, slice, int) v, builder b) inline;
+
+;; $StakingPool$_store
+builder $StakingPool$_store(builder build_0, (slice, int, int) v) inline;
+
+;; $StakingPool$_load
+(slice, ((slice, int, int))) $StakingPool$_load(slice sc_0) inline;
+
+;; $Context$_get_value
+_ $Context$_get_value((int, slice, int, slice) v) inline;
+
+;; $StakingPool$init$_load
+(slice, ((slice))) $StakingPool$init$_load(slice sc_0) inline;
+
+;; $StakingPool$_contract_init
+(slice, int, int) $StakingPool$_contract_init(slice $admin) impure inline;
+
+;; $StakingPool$_contract_load
+(slice, int, int) $StakingPool$_contract_load() impure inline;
+
+;; $StakingPool$_contract_store
+() $StakingPool$_contract_store((slice, int, int) v) impure inline;
+
+;; $global_emit
+() $global_emit(cell $body) impure inline;
+
+;; $StakingPool$_fun_getAdmin
+((slice, int, int), slice) $StakingPool$_fun_getAdmin((slice, int, int) $self) impure inline_ref;
+
+;; $StakingPool$_fun_getBalance
+((slice, int, int), int) $StakingPool$_fun_getBalance((slice, int, int) $self) impure inline_ref;
+
+;; $StakingPool$_fun_getTotalStaked
+((slice, int, int), int) $StakingPool$_fun_getTotalStaked((slice, int, int) $self) impure inline_ref;
+
+;; $StakingPool$_fun_getStakeCount
+((slice, int, int), int) $StakingPool$_fun_getStakeCount((slice, int, int) $self) impure inline_ref;
+
+;; $MessageParameters$_constructor_bounce_to_value_mode_body
+((int, cell, int, slice, int)) $MessageParameters$_constructor_bounce_to_value_mode_body(int $bounce, slice $to, int $value, int $mode, cell $body) inline;
+
+;; $StakingPool$_fun_notify
+((slice, int, int), ()) $StakingPool$_fun_notify((slice, int, int) $self, cell $body) impure inline;
+
+;; $StakeReceived$_constructor_from_amount_stake_id_timestamp
+((slice, int, slice, int)) $StakeReceived$_constructor_from_amount_stake_id_timestamp(slice $from, int $amount, slice $stake_id, int $timestamp) inline;
+
+;; $SendParameters$_constructor_to_value_mode_body
+((int, cell, cell, cell, int, slice, int)) $SendParameters$_constructor_to_value_mode_body(slice $to, int $value, int $mode, cell $body) inline;
+
+;; $WithdrawProcessed$_constructor_to_amount_stake_id_timestamp
+((slice, int, slice, int)) $WithdrawProcessed$_constructor_to_amount_stake_id_timestamp(slice $to, int $amount, slice $stake_id, int $timestamp) inline;
+
+;; $SendParameters$_constructor_to_value_mode
+((int, cell, cell, cell, int, slice, int)) $SendParameters$_constructor_to_value_mode(slice $to, int $value, int $mode) inline;
+
+;; $DeployOk$_constructor_queryId
+((int)) $DeployOk$_constructor_queryId(int $queryId) inline;
+
+
+;; StakingPool_StakingPool.stdlib.fc
+global (int, slice, int, slice) __tact_context;
+global slice __tact_context_sender;
+global cell __tact_child_contract_codes;
+global int __tact_randomized;
+
+(int, slice, int, slice) __tact_context_get() inline {
+    return __tact_context;
+}
+
+slice __tact_context_get_sender() inline {
+    return __tact_context_sender;
+}
+
+builder $global_beginCell() impure asm """
+    NEWC
+""";
+
+int $global_myBalance() impure asm """
+    BALANCE FIRST
+""";
+
+() $global_nativeReserve(int $amount, int $mode) impure asm """
+    RAWRESERVE
+""";
+
+() $global_message((int, cell, int, slice, int) $params) impure asm """
+    NEWC
+    b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+    1 STI               // store `bounce`
+    b{000} STSLICECONST // store bounced = false and src = addr_none
+    STSLICE             // store `to`
+    SWAP
+    STGRAMS             // store `value`
+    106 PUSHINT         // 1 + 4 + 4 + 64 + 32 + 1
+    STZEROES
+    // → Stack state
+    // s0: Builder
+    // s1: `body`
+    // s2: `mode`
+    STDICT
+    ENDC
+    SWAP
+    SENDRAWMSG
+""";
+
+() $global_send((int, cell, cell, cell, int, slice, int) $params) impure asm """
+    NEWC
+    b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+    1 STI               // store `bounce`
+    b{000} STSLICECONST // store bounced = false and src = addr_none
+    STSLICE             // store `to`
+    SWAP
+    STGRAMS             // store `value`
+    105 PUSHINT         // 1 + 4 + 4 + 64 + 32
+    STZEROES            // store currency_collection, ihr_fee, fwd_fee, created_lt and created_at
+    // → Stack state
+    // s0: Builder
+    // s1: `data`
+    // s2: `code`
+    // s3: `body`
+    // s4: `mode`
+
+    // Group 2: Placing the Builder after code and data, then checking those for nullability
+    s2 XCHG0
+    DUP2
+    ISNULL
+    SWAP
+    ISNULL
+    AND
+    // → Stack state
+    // s0: -1 (true) if `data` and `code` are both null, 0 (false) otherwise
+    // s1: `code`
+    // s2: `data`
+    // s3: Builder
+    // s4: `body`
+    // s5: `mode`
+
+    // Group 3: Left branch of the IFELSE, executed if s0 is -1 (true)
+    <{
+        DROP2 // drop `data` and `code`, since either of those is null
+        b{0} STSLICECONST
+    }> PUSHCONT
+
+    // Group 3: Right branch of the IFELSE, executed if s0 is 0 (false)
+    <{
+        // _ split_depth:(Maybe (## 5))
+        //   special:(Maybe TickTock)
+        //   code:(Maybe ^Cell)
+        //   data:(Maybe ^Cell)
+        //   library:(Maybe ^Cell)
+        // = StateInit;
+        ROT                // place message Builder on top
+        b{10} STSLICECONST // store Maybe = true, Either = false
+        // Start composing inlined StateInit
+        b{00} STSLICECONST // store split_depth and special first
+        STDICT             // store code
+        STDICT             // store data
+        b{0} STSLICECONST  // store library
+    }> PUSHCONT
+
+    // Group 3: IFELSE that does the branching shown above
+    IFELSE
+    // → Stack state
+    // s0: Builder
+    // s1: null or StateInit
+    // s2: `body`
+    // s3: `mode`
+
+    // Group 4: Finalizing the message
+    STDICT // store `body` as ref with an extra Maybe bit, since `body` might be null
+    ENDC
+    // → Stack state
+    // s0: Cell
+    // s1: `mode`
+
+    // Group 5: Sending the message, with `mode` on top
+    SWAP
+    SENDRAWMSG // https://github.com/tact-lang/tact/issues/1558
+""";
+
+() $global_sendRawMessage(cell $msg, int $mode) impure asm """
+    SENDRAWMSG
+""";
+
+cell $Builder$_fun_endCell(builder $self) impure asm """
+    ENDC
+""";
+
+builder $Builder$_fun_storeRef(cell $cell, builder $self) impure asm """
+    STREF
+""";
+
+() $global_emit(cell $body) impure inline {
+    cell $c = $Builder$_fun_endCell($Builder$_fun_storeRef($body, store_uint($global_beginCell(), 15211807202738752817960438464513, 104)));
+    $global_sendRawMessage($c, 0);
+}
+
+int $global_now() impure asm """
+    NOW
+""";
+
+((slice, int, int), ()) $StakingPool$_fun_notify((slice, int, int) $self, cell $body) impure inline {
+    var (($self'admin, $self'total_staked, $self'stake_count)) = $self;
+    slice $to = __tact_context_get_sender();
+    int $bounce = false;
+    if (false) {
+        int $balance = $global_myBalance();
+        int $balanceBeforeMessage = ($balance - $Context$_get_value(__tact_context_get()));
+        if (($balanceBeforeMessage < 0)) {
+            $global_nativeReserve(0, 0);
+            $global_message($MessageParameters$_constructor_bounce_to_value_mode_body($bounce, $to, 0, 130, $body));
+            return (($self'admin, $self'total_staked, $self'stake_count), ());
+        }
+    }
+    $global_message($MessageParameters$_constructor_bounce_to_value_mode_body($bounce, $to, 0, 66, $body));
+    return (($self'admin, $self'total_staked, $self'stake_count), ());
+}
+
+;; StakingPool_StakingPool.storage.fc
+;;
+;; Type: Context
+;; TLB: _ bounceable:bool sender:address value:int257 raw:^slice = Context
+;;
+
+_ $Context$_get_value((int, slice, int, slice) v) inline {
+    var (v'bounceable, v'sender, v'value, v'raw) = v;
+    return v'value;
+}
+
+;;
+;; Type: SendParameters
+;; TLB: _ mode:int257 body:Maybe ^cell code:Maybe ^cell data:Maybe ^cell value:int257 to:address bounce:bool = SendParameters
+;;
+
+((int, cell, cell, cell, int, slice, int)) $SendParameters$_constructor_to_value_mode_body(slice $to, int $value, int $mode, cell $body) inline {
+    return ($mode, $body, null(), null(), $value, $to, true);
+}
+
+((int, cell, cell, cell, int, slice, int)) $SendParameters$_constructor_to_value_mode(slice $to, int $value, int $mode) inline {
+    return ($mode, null(), null(), null(), $value, $to, true);
+}
+
+;;
+;; Type: MessageParameters
+;; TLB: _ mode:int257 body:Maybe ^cell value:int257 to:address bounce:bool = MessageParameters
+;;
+
+((int, cell, int, slice, int)) $MessageParameters$_constructor_bounce_to_value_mode_body(int $bounce, slice $to, int $value, int $mode, cell $body) inline {
+    return ($mode, $body, $value, $to, $bounce);
+}
+
+;;
+;; Type: DeployOk
+;; Header: 0xaff90f57
+;; TLB: deploy_ok#aff90f57 queryId:uint64 = DeployOk
+;;
+
+builder $DeployOk$_store(builder build_0, (int) v) inline {
+    var (v'queryId) = v;
+    build_0 = store_uint(build_0, 2952335191, 32);
+    build_0 = build_0.store_uint(v'queryId, 64);
+    return build_0;
+}
+
+cell $DeployOk$_store_cell((int) v, builder b) inline {
+    return $DeployOk$_store(b, v).end_cell();
+}
+
+((int)) $DeployOk$_constructor_queryId(int $queryId) inline {
+    return ($queryId);
+}
+
+;;
+;; Type: StakeReceived
+;; Header: 0x3823cec0
+;; TLB: stake_received#3823cec0 from:address amount:coins stake_id:^string timestamp:uint32 = StakeReceived
+;;
+
+builder $StakeReceived$_store(builder build_0, (slice, int, slice, int) v) inline {
+    var (v'from, v'amount, v'stake_id, v'timestamp) = v;
+    build_0 = store_uint(build_0, 941870784, 32);
+    build_0 = build_0.store_slice(v'from);
+    build_0 = build_0.store_varuint16(v'amount);
+    build_0 = build_0.store_builder_ref(begin_cell().store_slice(v'stake_id));
+    build_0 = build_0.store_uint(v'timestamp, 32);
+    return build_0;
+}
+
+cell $StakeReceived$_store_cell((slice, int, slice, int) v, builder b) inline {
+    return $StakeReceived$_store(b, v).end_cell();
+}
+
+((slice, int, slice, int)) $StakeReceived$_constructor_from_amount_stake_id_timestamp(slice $from, int $amount, slice $stake_id, int $timestamp) inline {
+    return ($from, $amount, $stake_id, $timestamp);
+}
+
+;;
+;; Type: WithdrawProcessed
+;; Header: 0x7a90f3b0
+;; TLB: withdraw_processed#7a90f3b0 to:address amount:coins stake_id:^string timestamp:uint32 = WithdrawProcessed
+;;
+
+builder $WithdrawProcessed$_store(builder build_0, (slice, int, slice, int) v) inline {
+    var (v'to, v'amount, v'stake_id, v'timestamp) = v;
+    build_0 = store_uint(build_0, 2056319920, 32);
+    build_0 = build_0.store_slice(v'to);
+    build_0 = build_0.store_varuint16(v'amount);
+    build_0 = build_0.store_builder_ref(begin_cell().store_slice(v'stake_id));
+    build_0 = build_0.store_uint(v'timestamp, 32);
+    return build_0;
+}
+
+cell $WithdrawProcessed$_store_cell((slice, int, slice, int) v, builder b) inline {
+    return $WithdrawProcessed$_store(b, v).end_cell();
+}
+
+((slice, int, slice, int)) $WithdrawProcessed$_constructor_to_amount_stake_id_timestamp(slice $to, int $amount, slice $stake_id, int $timestamp) inline {
+    return ($to, $amount, $stake_id, $timestamp);
+}
+
+;;
+;; Type: StakingPool
+;; TLB: _ admin:address total_staked:coins stake_count:uint32 = StakingPool
+;;
+
+builder $StakingPool$_store(builder build_0, (slice, int, int) v) inline {
+    var (v'admin, v'total_staked, v'stake_count) = v;
+    build_0 = build_0.store_slice(v'admin);
+    build_0 = build_0.store_varuint16(v'total_staked);
+    build_0 = build_0.store_uint(v'stake_count, 32);
+    return build_0;
+}
+
+(slice, ((slice, int, int))) $StakingPool$_load(slice sc_0) inline {
+    var v'admin = sc_0~load_msg_addr();
+    var v'total_staked = sc_0~load_varuint16();
+    var v'stake_count = sc_0~load_uint(32);
+    return (sc_0, (v'admin, v'total_staked, v'stake_count));
+}
+
+(slice, ((slice))) $StakingPool$init$_load(slice sc_0) inline {
+    var v'admin = sc_0~load_msg_addr();
+    return (sc_0, (v'admin));
+}
+
+(slice, int, int) $StakingPool$_contract_load() impure inline {
+    slice $sc = get_data().begin_parse();
+    int $loaded = $sc~load_int(1);
+    if ($loaded) {
+        return $sc~$StakingPool$_load();
+    }
+    else {
+        (slice $admin) = $sc~$StakingPool$init$_load();
+        $sc.end_parse();
+        return $StakingPool$_contract_init($admin);
+    }
+}
+
+() $StakingPool$_contract_store((slice, int, int) v) impure inline {
+    builder b = begin_cell();
+    b = b.store_int(true, 1);
+    b = $StakingPool$_store(b, v);
+    set_data(b.end_cell());
+}
+
+;;
+;; Contract StakingPool functions
+;;
+
+(slice, int, int) $StakingPool$_contract_init(slice $admin) impure inline {
+    var (($self'admin, $self'total_staked, $self'stake_count)) = (null(), null(), null());
+    $self'admin = $admin;
+    $self'total_staked = 0;
+    $self'stake_count = 0;
+    return ($self'admin, $self'total_staked, $self'stake_count);
+}
+
+((slice, int, int), slice) $StakingPool$_fun_getAdmin((slice, int, int) $self) impure inline_ref {
+    var (($self'admin, $self'total_staked, $self'stake_count)) = $self;
+    var $fresh$ret_0 = $self'admin;
+    return (($self'admin, $self'total_staked, $self'stake_count), $fresh$ret_0);
+}
+
+((slice, int, int), int) $StakingPool$_fun_getBalance((slice, int, int) $self) impure inline_ref {
+    var (($self'admin, $self'total_staked, $self'stake_count)) = $self;
+    var $fresh$ret_1 = $global_myBalance();
+    return (($self'admin, $self'total_staked, $self'stake_count), $fresh$ret_1);
+}
+
+((slice, int, int), int) $StakingPool$_fun_getTotalStaked((slice, int, int) $self) impure inline_ref {
+    var (($self'admin, $self'total_staked, $self'stake_count)) = $self;
+    var $fresh$ret_2 = $self'total_staked;
+    return (($self'admin, $self'total_staked, $self'stake_count), $fresh$ret_2);
+}
+
+((slice, int, int), int) $StakingPool$_fun_getStakeCount((slice, int, int) $self) impure inline_ref {
+    var (($self'admin, $self'total_staked, $self'stake_count)) = $self;
+    var $fresh$ret_3 = $self'stake_count;
+    return (($self'admin, $self'total_staked, $self'stake_count), $fresh$ret_3);
+}
+
+;;
+;; Get methods of a Contract StakingPool
+;;
+
+_ %getAdmin() method_id(69338) {
+    var self = $StakingPool$_contract_load();
+    var res = self~$StakingPool$_fun_getAdmin();
+    return res;
+}
+
+_ %getBalance() method_id(106323) {
+    var self = $StakingPool$_contract_load();
+    var res = self~$StakingPool$_fun_getBalance();
+    return res;
+}
+
+_ %getTotalStaked() method_id(102326) {
+    var self = $StakingPool$_contract_load();
+    var res = self~$StakingPool$_fun_getTotalStaked();
+    return res;
+}
+
+_ %getStakeCount() method_id(127836) {
+    var self = $StakingPool$_contract_load();
+    var res = self~$StakingPool$_fun_getStakeCount();
+    return res;
+}
+
+;;
+;; Routing of a Contract StakingPool
+;;
+
+;; message opcode reader utility: only binary receivers
+;; Returns 32 bit message opcode, otherwise throws the "Invalid incoming message" exit code
+(slice, int) ~load_opcode_internal(slice s) asm( -> 1 0) "32 LDUQ 130 THROWIFNOT";
+
+() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
+    
+    ;; Context
+    var cs = in_msg_cell.begin_parse();
+    cs~skip_bits(2);
+    var msg_bounceable = cs~load_int(1);
+    var msg_bounced = cs~load_int(1);
+    slice msg_sender_addr = cs~load_msg_addr();
+    __tact_context = (msg_bounceable, msg_sender_addr, msg_value, cs);
+    __tact_context_sender = msg_sender_addr;
+    
+    ;; Load contract data
+    var ($self'admin, $self'total_staked, $self'stake_count) = $StakingPool$_contract_load();
+    
+    ;; Handle bounced messages
+    if (msg_bounced) { return (); }
+    int op = 0;
+    int in_msg_length = slice_bits(in_msg);
+    if (in_msg_length >= 32) {
+        op = in_msg~load_uint(32);
+        ;; Receive Stake message
+        if (op == 2946216789) {
+            var $msg'user_id = in_msg~load_ref().begin_parse();
+            var $msg'stake_id = in_msg~load_ref().begin_parse();
+            var ($ctx'bounceable, $ctx'sender, $ctx'value, $ctx'raw) = __tact_context_get();
+            throw_unless(53220, ($ctx'value > 50000000));
+            int $stake_amount = ($ctx'value - 10000000);
+            $self'total_staked = ($self'total_staked + $stake_amount);
+            $self'stake_count = ($self'stake_count + 1);
+            $global_emit($StakeReceived$_store_cell($StakeReceived$_constructor_from_amount_stake_id_timestamp($ctx'sender, $stake_amount, $msg'stake_id, $global_now()), begin_cell()));
+            $StakingPool$_contract_store(($self'admin, $self'total_staked, $self'stake_count));
+            return ();
+        }
+        
+        ;; Receive AdminWithdraw message
+        if (op == 1338333115) {
+            var $msg'to = in_msg~load_msg_addr();
+            var $msg'amount = in_msg~load_varuint16();
+            var $msg'stake_id = in_msg~load_ref().begin_parse();
+            var ($ctx'bounceable, $ctx'sender, $ctx'value, $ctx'raw) = __tact_context_get();
+            throw_unless(34370, ( equal_slices_bits($ctx'sender, $self'admin) ));
+            throw_unless(61135, ($msg'amount > 0));
+            throw_unless(44188, (($global_myBalance() - $msg'amount) > 100000000));
+            $self'total_staked = ($self'total_staked - $msg'amount);
+            $global_send($SendParameters$_constructor_to_value_mode_body($msg'to, $msg'amount, 2, $WithdrawProcessed$_store_cell($WithdrawProcessed$_constructor_to_amount_stake_id_timestamp($msg'to, $msg'amount, $msg'stake_id, $global_now()), begin_cell())));
+            $StakingPool$_contract_store(($self'admin, $self'total_staked, $self'stake_count));
+            return ();
+        }
+        
+        ;; Receive EmergencyWithdraw message
+        if (op == 2087662698) {
+            var $msg'to = in_msg~load_msg_addr();
+            var ($ctx'bounceable, $ctx'sender, $ctx'value, $ctx'raw) = __tact_context_get();
+            throw_unless(16461, ( equal_slices_bits($ctx'sender, $self'admin) ));
+            $global_send($SendParameters$_constructor_to_value_mode($msg'to, 0, 130));
+            $self'total_staked = 0;
+            $StakingPool$_contract_store(($self'admin, $self'total_staked, $self'stake_count));
+            return ();
+        }
+        
+        ;; Receive Deploy message
+        if (op == 0x946a98b6) {
+            var $deploy'queryId = in_msg~load_uint(64);
+            ($self'admin, $self'total_staked, $self'stake_count)~$StakingPool$_fun_notify($DeployOk$_store_cell($DeployOk$_constructor_queryId($deploy'queryId), begin_cell()));
+            $StakingPool$_contract_store(($self'admin, $self'total_staked, $self'stake_count));
+            return ();
+        }
+        
+    }
+    ;; Receive empty message
+    if ((op == 0) & (in_msg_length <= 32)) {
+        $StakingPool$_contract_store(($self'admin, $self'total_staked, $self'stake_count));
+        return ();
+    }
+    ;; Empty Receiver and Text Receivers
+    var text_op = slice_hash(in_msg);
+    ;; Receive "ChangeAdmin" message
+    if (text_op == 0x1fd9d4e901449cbca5c4f6cd1239117af56ffffbe2bb22792a254c2ecc208cd8) {
+        $StakingPool$_contract_store(($self'admin, $self'total_staked, $self'stake_count));
+        return ();
+    }
+    ;; Throw if not handled
+    throw(130);
+}
+
+
+() __tact_selector_hack_asm() impure asm """
+@atend @ 1 {
+        execute current@ context@ current!
+        {
+            // The core idea of this function is to save gas by avoiding unnecessary dict jump, when recv_internal/recv_external is called
+            // We want to extract recv_internal/recv_external from the dict and select needed function
+            // not by jumping to the needed function by it's index, but by using usual IF statements.
+
+            }END> b> // Close previous builder, now we have a cell of previous code on top of the stack
+
+            <{ // Start of the new code builder
+                SETCP0
+                // Swap the new code builder with the previous code, now we have previous code on top of the stack
+                swap
+                // Transform cell to slice and load first ref from the previous code, now we have the dict on top of the stack
+                <s ref@
+
+                // Extract the recv_internal from the dict
+                dup 0 swap @procdictkeylen idict@ { "internal shortcut error" abort } ifnot
+                swap
+
+                // Delete the recv_internal from the dict
+                0 swap @procdictkeylen idict- drop
+                // Delete the recv_external from the dict (it's okay if it's not there)
+                -1 swap @procdictkeylen idict- drop
+                // Delete the __tact_selector_hack from the dict
+                65535 swap @procdictkeylen idict- drop
+
+                // Bring the code builder from the bottom of the stack
+                // because if recv_external extraction is optional, and the number of elements on the stack is not fixed
+                depth 1- roll
+                // Swap with the dict from which we extracted recv_internal and (maybe) recv_external
+                swap
+
+                // Check if the dict is empty
+                dup null?
+                // Store a copy of this flag in the bottom of the stack
+                dup depth 1- -roll
+                {
+                    // If the dict is empty, just drop it (it will be null if it's empty)
+                    drop
+                }
+                {
+                    // If the dict is not empty, prepare continuation to be stored in c3
+                    <{
+                        // Save this dict as first ref in this continuation, it will be pushed in runtime by DICTPUSHCONST
+                        swap @procdictkeylen DICTPUSHCONST
+                        // Jump to the needed function by it's index
+                        DICTIGETJMPZ
+                        // If such key is not found, throw 11 along with the key as an argument
+                        11 THROWARG
+                    }> PUSHCONT
+                    // Store the continuation in c3
+                    c3 POP
+                } cond
+
+                // Function id is on top of the (runtime) stack
+                DUP IFNOTJMP:<{
+                    // place recv_internal here
+                    DROP swap @addop
+                }>
+
+                // Bring back the flag, indicating if the dict is empty or not from the bottom of the stack
+                depth 1- roll
+                {
+                    // If the dict is empty, throw 11
+                    11 THROWARG
+                }
+                {
+                    // If the dict is not empty, jump to continuation from c3
+                    c3 PUSH JMPX
+                } cond
+            }> b>
+        } : }END>c
+        current@ context! current!
+    } does @atend !
+""";
+
+() __tact_selector_hack() method_id(65535) {
+    return __tact_selector_hack_asm();
+}
