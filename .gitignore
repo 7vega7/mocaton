@@ -1,0 +1,7 @@
+node_modules/
+contract/node_modules/
+contract/build/
+dist/
+.env
+.env.local
+*.log
