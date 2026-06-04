@@ -5,3 +5,6 @@ pages_build_output_dir = "dist"
 
 [vars]
 MINI_APP_URL = "https://mocaton.pages.dev"
+
+[build]
+command = "npm install && npm run build"
