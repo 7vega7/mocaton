@@ -20,14 +20,31 @@ export default function App() {
   useEffect(() => {
     const init = async () => {
       try {
-        if (window.Telegram?.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+        }
         const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
         const initData = window.Telegram?.WebApp?.initData || '';
+        // Ambil referral code dari start_param
+        const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+
         if (tgUser) setUser(tgUser);
+
         if (initData) {
           try {
-            const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData } });
-            if (res.ok) { const d = await res.json(); if (d.is_admin) setIsAdmin(true); }
+            const res = await fetch('/api/auth/register', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': initData,
+              },
+              body: JSON.stringify({ referral_code: startParam }),
+            });
+            if (res.ok) {
+              const d = await res.json();
+              if (d.is_admin) setIsAdmin(true);
+            }
           } catch (e) { console.error(e); }
         }
       } catch (e) { console.error(e); }
@@ -37,8 +54,8 @@ export default function App() {
   }, []);
 
   if (isLoading) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'#0E1117', color:'#00B4D8', gap:'16px' }}>
-      <div style={{ width:'40px', height:'40px', border:'3px solid #2A3447', borderTopColor:'#00B4D8', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'#020408', color:'#00F5FF', gap:'16px' }}>
+      <div style={{ width:'40px', height:'40px', border:'3px solid #0F2040', borderTopColor:'#00F5FF', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
