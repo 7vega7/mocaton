@@ -1,27 +1,26 @@
+import { Buffer } from 'buffer';
+globalThis.Buffer = Buffer;
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './App.css';
 
-// Global error handler
 window.onerror = (msg, src, line, col, err) => {
-  document.body.innerHTML = `
-    <div style="color:white;padding:20px;font-family:monospace;background:#0E1117;min-height:100vh">
-      <h3 style="color:#ef4444">JS Error</h3>
-      <p>${msg}</p>
-      <p>${src}:${line}:${col}</p>
-      <pre style="font-size:11px;color:#888">${err?.stack || ''}</pre>
-    </div>
-  `;
+  const d = document.getElementById('debug');
+  if (d) {
+    (d as HTMLElement).style.display = 'block';
+    (d as HTMLElement).textContent = `ERROR: ${msg}\n${src}:${line}\n${err?.stack || ''}`;
+  }
+  return false;
 };
 
 window.onunhandledrejection = (e) => {
-  document.body.innerHTML = `
-    <div style="color:white;padding:20px;font-family:monospace;background:#0E1117;min-height:100vh">
-      <h3 style="color:#ef4444">Unhandled Promise</h3>
-      <pre style="font-size:11px;color:#888">${e.reason}</pre>
-    </div>
-  `;
+  const d = document.getElementById('debug');
+  if (d) {
+    (d as HTMLElement).style.display = 'block';
+    (d as HTMLElement).textContent = `PROMISE ERROR:\n${e.reason}`;
+  }
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -7,7 +7,10 @@ export default defineConfig({
     outDir: 'dist',
     chunkSizeWarningLimit: 2000,
   },
+  define: {
+    global: 'globalThis',
+  },
   optimizeDeps: {
-    exclude: ['@ton/ton', '@ton/core', '@ton/crypto'],
+    include: ['buffer'],
   },
 });
