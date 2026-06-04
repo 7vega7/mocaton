@@ -219,7 +219,7 @@ async function handleAdminPending(supabase: any, env: Env, chatId: number) {
 
 async function handleAdminConfirm(shortId: string, supabase: any, env: Env, chatId: number, adminTelegramId: number) {
   const { data: adminUser } = await supabase.from('users').select('id').eq('telegram_id', adminTelegramId).single();
-  const { data: withdraws } = await supabase.from('withdraw_requests').select('*, users(telegram_id, full_name)').like('id', `${shortId}%`).eq('status', 'pending').limit(1);
+  const { data: withdraws } = await supabase.from('withdraw_requests').select('*, users(telegram_id, full_name)').filter('id::text', 'like', `${shortId}%`).eq('status', 'pending').limit(1);
 
   if (!withdraws || withdraws.length === 0) {
     await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, `❌ Withdrawal \`${shortId}\` not found or already processed.`);
@@ -243,7 +243,7 @@ async function handleAdminConfirm(shortId: string, supabase: any, env: Env, chat
 }
 
 async function handleAdminReject(shortId: string, reason: string, supabase: any, env: Env, chatId: number, adminTelegramId: number) {
-  const { data: withdraws } = await supabase.from('withdraw_requests').select('*, stakes(id), users(telegram_id, full_name)').like('id', `${shortId}%`).eq('status', 'pending').limit(1);
+  const { data: withdraws } = await supabase.from('withdraw_requests').select('*, stakes(id), users(telegram_id, full_name)').filter('id::text', 'like', `${shortId}%`).eq('status', 'pending').limit(1);
 
   if (!withdraws || withdraws.length === 0) {
     await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, `❌ Withdrawal \`${shortId}\` not found.`);
