@@ -20,6 +20,7 @@ export default function Home({ user }: HomeProps) {
   const [data, setData] = useState<MCTData | null>(null);
   const [liveMct, setLiveMct] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showWithdrawInfo, setShowWithdrawInfo] = useState(false);
   const lastFetchRef = useRef<MCTData | null>(null);
   const fetchTimeRef = useRef<number>(0);
   const animRef = useRef<number>();
@@ -42,8 +43,7 @@ export default function Home({ user }: HomeProps) {
       if (lastFetchRef.current) {
         const elapsed = (Date.now() - fetchTimeRef.current) / 3600000;
         const totalPerHour = (lastFetchRef.current.mct_per_hour || 0) + (lastFetchRef.current.referral_mct_per_hour || 0);
-        const estimated = (lastFetchRef.current.total_mct || 0) + totalPerHour * elapsed;
-        setLiveMct(estimated);
+        setLiveMct((lastFetchRef.current.total_mct || 0) + totalPerHour * elapsed);
       }
       animRef.current = requestAnimationFrame(tick);
     };
@@ -71,8 +71,90 @@ export default function Home({ user }: HomeProps) {
           <div className="points-row"><span>👥 From Referrals</span><span>{(data?.referral_mct || 0).toFixed(4)} MCT</span></div>
           <div className="points-row"><span>⚡ Earning Rate</span><span>{totalPerHour.toFixed(4)} MCT/hr</span></div>
         </div>
-        <div className="live-indicator"><span className="live-dot" /> Live</div>
+
+        {/* Withdraw MCT Button */}
+        <button
+          onClick={() => setShowWithdrawInfo(true)}
+          style={{
+            marginTop: '16px',
+            width: '100%',
+            padding: '12px',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '10px',
+            color: '#8892A4',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontFamily: 'inherit',
+          }}
+        >
+          <span>💸 Withdraw $MCT</span>
+          <span style={{
+            fontSize: '10px',
+            background: 'rgba(245,158,11,0.2)',
+            color: '#F59E0B',
+            padding: '2px 8px',
+            borderRadius: '20px',
+            fontWeight: '700',
+            letterSpacing: '0.05em',
+          }}>COMING SOON</span>
+        </button>
+
+        <div className="live-indicator" style={{ marginTop: '10px' }}>
+          <span className="live-dot" /> Live
+        </div>
       </div>
+
+      {/* Coming Soon Modal */}
+      {showWithdrawInfo && (
+        <div
+          onClick={() => setShowWithdrawInfo(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '24px',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#161B26', border: '1px solid #2A3447',
+              borderRadius: '20px', padding: '28px', maxWidth: '340px', width: '100%',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚀</div>
+            <h3 style={{ fontSize: '20px', marginBottom: '8px', color: '#F0F4FF' }}>
+              $MCT Withdrawal
+            </h3>
+            <p style={{ color: '#8892A4', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
+              $MCT token withdrawal is coming soon!<br /><br />
+              Keep staking to accumulate your $MCT balance.
+              When the token launches, you'll be able to withdraw directly to your TON wallet.
+            </p>
+            <div style={{
+              background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+              borderRadius: '10px', padding: '12px', marginBottom: '20px',
+            }}>
+              <p style={{ color: '#F59E0B', fontSize: '13px', margin: 0 }}>
+                💡 Your $MCT is being recorded and will be claimable at launch!
+              </p>
+            </div>
+            <button
+              onClick={() => setShowWithdrawInfo(false)}
+              className="btn-primary"
+              style={{ width: '100%', padding: '12px' }}
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="stats-grid">
         <div className="stat-card"><span className="stat-icon">🪙</span><span className="stat-value">{totalStaked.toFixed(2)}</span><span className="stat-label">TON Staked</span></div>
