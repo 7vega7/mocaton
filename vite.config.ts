@@ -6,12 +6,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     chunkSizeWarningLimit: 2000,
-    rollupOptions: {
-      external: ['@ton/ton', '@ton/core', '@ton/crypto'],
-    },
   },
   define: {
     global: 'globalThis',
     'process.env': {},
+    Buffer: ['buffer', 'Buffer'],
   },
 });
