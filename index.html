@@ -7,11 +7,24 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { background: #0E1117; min-height: 100vh; }
+      body { background: #0E1117; min-height: 100vh; color: white; font-family: monospace; }
       #root { min-height: 100vh; }
+      #debug { position:fixed; top:0; left:0; right:0; background:#1a0000; color:#ff6b6b; padding:12px; font-size:12px; z-index:9999; display:none; white-space:pre-wrap; word-break:break-all; max-height:50vh; overflow:auto; }
     </style>
+    <script>
+      window.onerror = function(msg, src, line, col, err) {
+        var d = document.getElementById('debug');
+        if(d) { d.style.display='block'; d.textContent = 'ERROR: ' + msg + '\n' + src + ':' + line + '\n' + (err && err.stack ? err.stack : ''); }
+        return false;
+      };
+      window.onunhandledrejection = function(e) {
+        var d = document.getElementById('debug');
+        if(d) { d.style.display='block'; d.textContent = 'PROMISE ERROR:\n' + JSON.stringify(e.reason, null, 2); }
+      };
+    </script>
   </head>
   <body>
+    <div id="debug"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
