@@ -20,12 +20,13 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   const { data: mct } = await supabase.rpc('calculate_user_mct', { p_user_id: user.id });
   const { data: referrals } = await supabase.from('users').select('id, username, full_name, stakes(id, amount_ton, status, staked_at)').eq('referred_by', user.id).limit(20);
 
+  // Link referral menggunakan t.me bot link
   const botUsername = env.BOT_USERNAME || 'mocatonbot';
   const referralLink = `https://t.me/${botUsername}?start=${user.referral_code}`;
 
   const referralsWithMct = (referrals || []).map(ref => {
     const activeStakes = ((ref.stakes as any[]) || []).filter((s: any) => ['active','withdraw_pending'].includes(s.status));
-    const mctPerHour = activeStakes.reduce((sum: number, s: any) => sum + s.amount_ton, 0);
+    const mctPerHour = activeStakes.reduce((sum: number, s: any) => sum + (s.amount_ton * 0.3), 0);
     const totalMct = activeStakes.reduce((sum: number, s: any) => {
       const hours = (Date.now() - new Date(s.staked_at).getTime()) / 3600000;
       return sum + s.amount_ton * hours * 0.3;
@@ -34,7 +35,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       username: ref.username || 'Anonymous',
       full_name: ref.full_name || 'Anonymous',
       active_stakes: activeStakes.length,
-      mct_per_hour: mctPerHour * 0.3,
+      mct_per_hour: mctPerHour,
       contributed_mct: totalMct,
     };
   });
