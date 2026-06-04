@@ -1,6 +1,3 @@
-// functions/api/withdraw/request.ts
-// User mengajukan request withdraw
-
 import { createClient } from '@supabase/supabase-js';
 import { validateTelegramAuth } from '../../_middleware/auth';
 
@@ -20,9 +17,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
   const telegramUser = await validateTelegramAuth(request, env.TELEGRAM_BOT_TOKEN);
-  if (!telegramUser) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!telegramUser) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   let body: WithdrawRequest;
   try {
@@ -32,25 +27,20 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   }
 
   const { stake_id, wallet_address } = body;
-
   if (!stake_id || !wallet_address) {
     return Response.json({ error: 'Missing stake_id or wallet_address' }, { status: 400 });
   }
 
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
 
-  // Get user
   const { data: user } = await supabase
     .from('users')
     .select('id')
     .eq('telegram_id', telegramUser.id)
     .single();
 
-  if (!user) {
-    return Response.json({ error: 'User not found' }, { status: 404 });
-  }
+  if (!user) return Response.json({ error: 'User not found' }, { status: 404 });
 
-  // Get stake - validasi milik user dan active
   const { data: stake } = await supabase
     .from('stakes')
     .select('*')
@@ -59,23 +49,18 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     .eq('status', 'active')
     .single();
 
-  if (!stake) {
-    return Response.json({ error: 'Stake not found or not active' }, { status: 404 });
-  }
+  if (!stake) return Response.json({ error: 'Stake not found or not active' }, { status: 404 });
 
-  // Cek apakah masih dalam lock period (weekly/monthly)
   if (stake.lock_ends_at && new Date(stake.lock_ends_at) > new Date()) {
     const lockEnd = new Date(stake.lock_ends_at);
     return Response.json({
-      error: `Stake ini masih dalam masa lock hingga ${lockEnd.toLocaleString('id-ID')}. Tidak bisa withdraw sebelum lock period selesai.`,
+      error: `Stake is locked until ${lockEnd.toLocaleString('en-US')}. Cannot unstake before lock period ends.`,
     }, { status: 400 });
   }
 
-  // Hitung scheduled_process_at = sekarang + 24 jam
   const requestedAt = new Date();
   const scheduledAt = new Date(requestedAt.getTime() + 24 * 60 * 60 * 1000);
 
-  // Buat withdraw request
   const { data: withdrawReq, error: withdrawError } = await supabase
     .from('withdraw_requests')
     .insert({
@@ -91,10 +76,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     .single();
 
   if (withdrawError) {
-    return Response.json({ error: 'Failed to create withdraw request' }, { status: 500 });
+    return Response.json({ error: 'Failed to create withdrawal request' }, { status: 500 });
   }
 
-  // Update stake status ke withdraw_pending
   await supabase
     .from('stakes')
     .update({
@@ -104,22 +88,26 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     })
     .eq('id', stake.id);
 
-  // Notifikasi admin via Telegram
+  // Notify admins in English
   const adminIds = env.TELEGRAM_ADMIN_IDS.split(',').map(id => id.trim());
-  const adminMsg = `🔔 *Withdraw Request Baru*
+  const adminMsg = `🔔 *New Unstake Request*
 
-👤 User: ${telegramUser.first_name} (ID: ${telegramUser.id})
-💰 Jumlah: ${stake.amount_ton} TON
+👤 User: ${telegramUser.first_name} (@${telegramUser.username || 'no_username'})
+💰 Amount: ${stake.amount_ton} TON
 📍 Wallet: \`${wallet_address}\`
-🔒 Tipe: ${stake.lock_type}
-⏰ Akan diproses: ${scheduledAt.toLocaleString('id-ID')}
+🔒 Type: ${stake.lock_type}
+⏰ Processes at: ${scheduledAt.toLocaleString('en-US')}
 
 ID: \`${withdrawReq.id.slice(0, 8)}\`
 /confirm ${withdrawReq.id.slice(0, 8)}
-/reject ${withdrawReq.id.slice(0, 8)} <alasan>`;
+/reject ${withdrawReq.id.slice(0, 8)} <reason>`;
 
   for (const adminId of adminIds) {
-    await notifyAdmin(env.TELEGRAM_BOT_TOKEN, adminId, adminMsg);
+    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: adminId, text: adminMsg, parse_mode: 'Markdown' }),
+    });
   }
 
   return Response.json({
@@ -132,22 +120,6 @@ ID: \`${withdrawReq.id.slice(0, 8)}\`
       scheduled_process_at: withdrawReq.scheduled_process_at,
       status: withdrawReq.status,
     },
-    message: `Withdraw request berhasil dibuat. TON akan dikirim ke wallet kamu pada ${scheduledAt.toLocaleString('id-ID')}. Poin kamu tetap berjalan selama menunggu!`,
+    message: `Unstake requested! TON will be returned to your wallet at ${scheduledAt.toLocaleString('en-US')}. $MCT keeps earning until then!`,
   });
-}
-
-async function notifyAdmin(token: string, chatId: string, text: string) {
-  try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: 'Markdown',
-      }),
-    });
-  } catch (err) {
-    console.error('Failed to notify admin:', err);
-  }
 }
